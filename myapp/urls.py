@@ -1,9 +1,22 @@
 from django.urls import path
-from . import views
-from .views import UserListCreateView, UserRetrieveView
+from .views import home, RegisterView, ProfileView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('users/', UserListCreateView.as_view(), name='users'),
-    path('users/<uuid:id>/', UserRetrieveView.as_view(), name='user-detail'),
+    path('', home),
+
+    # Register
+    path('register/', RegisterView.as_view(), name='register'),
+
+    # Login (JWT)
+    path('login/', TokenObtainPairView.as_view(), name='login'),
+
+    # Refresh Token
+    path('refresh/', TokenRefreshView.as_view(), name='refresh'),
+
+    # Protected route
+    path('profile/', ProfileView.as_view(), name='profile'),
 ]
