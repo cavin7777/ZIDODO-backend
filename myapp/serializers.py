@@ -22,7 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
-
+ 
 
 # ==========================
 # GENERAL USER SERIALIZER (for listing/profile)
