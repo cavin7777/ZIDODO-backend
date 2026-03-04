@@ -11,8 +11,13 @@ SECRET_KEY = 'django-insecure-((6i^_k8uk41ph%v=0#@g4q4h42(^9&6gz%5l6qydy0=fl@x^x
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://curly-adventure-jjg779x7496r2qrwj-8000.app.github.dev/',
+    'https://localhost:8000',
+]
 
 # ==========================================
 # INSTALLED APPS
@@ -25,7 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'myapp',   # Your app
+    'myapp',  
 ]
 
 # ==========================================
