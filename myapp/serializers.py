@@ -1,8 +1,34 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+from myapp.models import Location, Quest, Reward
+
 User = get_user_model()
 
+
+# ==========================
+# LOCATION SERIALIZER
+# ==========================
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = '__all__'
+
+# ==========================
+# QUEST SERIALIZER
+# ==========================
+class QuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quest
+        fields = '__all__'
+
+# ==========================
+# REWARD SERIALIZER
+# ==========================
+class RewardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reward
+        fields = '__all__'
 
 # ==========================
 # REGISTRATION SERIALIZER

@@ -1,11 +1,11 @@
 from django.urls import path
 from .views import (
+    LocationListCreateView,
     home,
     RegisterView,
     ProfileView,
     UserListCreateView,
     UserRetrieveView,
-    LocationListView,
     QuestListView,
     QuestDetailView,
     CompleteQuestView,
@@ -42,7 +42,7 @@ urlpatterns = [
     # ==========================
     # LOCATIONS
     # ==========================
-    path('locations/', LocationListView.as_view(), name='locations'),
+    path('locations/', LocationListCreateView.as_view(), name='locations'),
 
     # ==========================
     # QUESTS

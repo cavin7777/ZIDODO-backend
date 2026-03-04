@@ -1,8 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, status, permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -36,7 +36,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 # ==========================
-# LIST ALL USERS (Optional)
+# LIST ALL USERS
 # ==========================
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all()
@@ -55,7 +55,7 @@ class UserRetrieveView(generics.RetrieveAPIView):
 
 
 # ==========================
-# PROFILE VIEW (Protected)
+# PROFILE VIEW
 # ==========================
 class ProfileView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -69,14 +69,18 @@ class ProfileView(generics.GenericAPIView):
 # LOCATION VIEWS
 # =====================================================
 
-class LocationListView(generics.ListAPIView):
+class LocationListCreateView(generics.ListCreateAPIView):
     """
-    GET /locations/
-    Returns all active locations.
+    GET /locations/  → anyone can view
+    POST /locations/ → only admins can create
     """
     queryset = Location.objects.filter(is_active=True)
     serializer_class = LocationSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [AllowAny()]
+        return [IsAdminUser()]
 
 
 # =====================================================
@@ -84,59 +88,33 @@ class LocationListView(generics.ListAPIView):
 # =====================================================
 
 class QuestListView(generics.ListAPIView):
-    """
-    GET /quests/
-    Returns all active quests.
-    """
     queryset = Quest.objects.filter(is_active=True)
     serializer_class = QuestSerializer
     permission_classes = [IsAuthenticated]
 
 
 class QuestDetailView(generics.RetrieveAPIView):
-    """
-    GET /quests/<id>/
-    Returns single quest with questions.
-    """
     queryset = Quest.objects.filter(is_active=True)
     serializer_class = QuestSerializer
     lookup_field = "id"
     permission_classes = [IsAuthenticated]
 
 
-# ==========================
-# COMPLETE QUEST VIEW
-# ==========================
 class CompleteQuestView(APIView):
-    """
-    POST /quests/<id>/complete/
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id):
-
         user = request.user
         quest = get_object_or_404(Quest, id=id)
 
-        # Check if already completed
         if UserQuest.objects.filter(user=user, quest=quest).exists():
-            return Response(
-                {"error": "Quest already completed"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Quest already completed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create completion record
         UserQuest.objects.create(user=user, quest=quest)
-
-        # Add points to user
         user.points += quest.points
         user.save()
 
-        return Response(
-            {"message": "Quest completed successfully"},
-            status=status.HTTP_200_OK
-        )
+        return Response({"message": "Quest completed successfully"}, status=status.HTTP_200_OK)
 
 
 # =====================================================
@@ -144,42 +122,23 @@ class CompleteQuestView(APIView):
 # =====================================================
 
 class RewardListView(generics.ListAPIView):
-    """
-    GET /rewards/
-    Returns all active rewards.
-    """
     queryset = Reward.objects.filter(is_active=True)
     serializer_class = RewardSerializer
     permission_classes = [IsAuthenticated]
 
 
 class RedeemRewardView(APIView):
-    """
-    POST /rewards/<id>/redeem/
-    """
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id):
-
         user = request.user
         reward = get_object_or_404(Reward, id=id)
 
-        # Check if user has enough points
         if user.points < reward.points_required:
-            return Response(
-                {"error": "Not enough points"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Not enough points"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Deduct points
         user.points -= reward.points_required
         user.save()
-
-        # Create reward record
         UserReward.objects.create(user=user, reward=reward)
 
-        return Response(
-            {"message": "Reward redeemed successfully"},
-            status=status.HTTP_200_OK
-        )
+        return Response({"message": "Reward redeemed successfully"}, status=status.HTTP_200_OK)
