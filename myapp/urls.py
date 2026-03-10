@@ -11,6 +11,7 @@ from .views import (
     CompleteQuestView,
     RewardListView,
     RedeemRewardView,
+    UserProgressView,   # ✅ ADD THIS
 )
 
 from rest_framework_simplejwt.views import (
@@ -38,6 +39,9 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('users/', UserListCreateView.as_view(), name='users'),
     path('users/<uuid:id>/', UserRetrieveView.as_view(), name='user-detail'),
+
+    # ✅ USER PROGRESS
+    path('progress/', UserProgressView.as_view(), name='user-progress'),
 
     # ==========================
     # LOCATIONS

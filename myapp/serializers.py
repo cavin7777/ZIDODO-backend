@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from myapp.models import Location, Quest, Reward
+from myapp.models import Location, Quest, Reward, UserProgress
 
 User = get_user_model()
 
@@ -57,3 +57,19 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ['password']
+
+
+# ==========================
+# USER PROGRESS SERIALIZER
+# ==========================
+class UserProgressSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProgress
+        fields = [
+            "user",
+            "quests_completed",
+            "rewards_redeemed",
+            "total_points",
+            "updated_at"
+        ]

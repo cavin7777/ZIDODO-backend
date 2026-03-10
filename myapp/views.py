@@ -5,11 +5,13 @@ from rest_framework import generics, status, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .models import UserProgress
 
 from django.contrib.auth import get_user_model
 
 from .models import Location, Quest, UserQuest, Reward, UserReward
 from .serializers import (
+    UserProgressSerializer,
     UserSerializer,
     RegisterSerializer,
     LocationSerializer,
@@ -107,14 +109,35 @@ class CompleteQuestView(APIView):
         user = request.user
         quest = get_object_or_404(Quest, id=id)
 
+        # Check if quest already completed
         if UserQuest.objects.filter(user=user, quest=quest).exists():
-            return Response({"error": "Quest already completed"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Quest already completed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Create completion record
         UserQuest.objects.create(user=user, quest=quest)
+
+        # Add quest points to user
         user.points += quest.points
         user.save()
 
-        return Response({"message": "Quest completed successfully"}, status=status.HTTP_200_OK)
+        # Update or create progress
+        progress, created = UserProgress.objects.get_or_create(user=user)
+
+        progress.quests_completed += 1
+        progress.total_points = user.points
+        progress.save()
+
+        return Response(
+            {
+                "message": "Quest completed successfully",
+                "points_earned": quest.points,
+                "total_points": user.points
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 # =====================================================
@@ -134,11 +157,49 @@ class RedeemRewardView(APIView):
         user = request.user
         reward = get_object_or_404(Reward, id=id)
 
+        # Check if user has enough points
         if user.points < reward.points_required:
-            return Response({"error": "Not enough points"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Not enough points"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Deduct points from user
         user.points -= reward.points_required
         user.save()
+
+        # Create reward redemption record
         UserReward.objects.create(user=user, reward=reward)
 
-        return Response({"message": "Reward redeemed successfully"}, status=status.HTTP_200_OK)
+        # Update user progress
+        progress, created = UserProgress.objects.get_or_create(user=user)
+
+        progress.rewards_redeemed += 1
+        progress.total_points = user.points
+        progress.save()
+
+        return Response(
+            {
+                "message": "Reward redeemed successfully",
+                "points_spent": reward.points_required,
+                "remaining_points": user.points
+            },
+            status=status.HTTP_200_OK
+        )
+    
+
+# =====================================================
+# PROGRESS VIEWS
+# =====================================================
+
+class UserProgressView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        progress = UserProgress.objects.get(user=request.user)
+
+        serializer = UserProgressSerializer(progress)
+
+        return Response(serializer.data)
