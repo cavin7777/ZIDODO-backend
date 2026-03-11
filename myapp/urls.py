@@ -1,3 +1,4 @@
+from django.contrib import admin
 from django.urls import path
 from .views import (
     LocationListCreateView,
@@ -11,7 +12,7 @@ from .views import (
     CompleteQuestView,
     RewardListView,
     RedeemRewardView,
-    UserProgressView,   # ✅ ADD THIS
+    UserProgressView,
 )
 
 from rest_framework_simplejwt.views import (
@@ -20,6 +21,9 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
+
+    # ADMIN
+    path('admin/', admin.site.urls),
 
     # ==========================
     # HOME
@@ -40,7 +44,7 @@ urlpatterns = [
     path('users/', UserListCreateView.as_view(), name='users'),
     path('users/<uuid:id>/', UserRetrieveView.as_view(), name='user-detail'),
 
-    # ✅ USER PROGRESS
+    # USER PROGRESS
     path('progress/', UserProgressView.as_view(), name='user-progress'),
 
     # ==========================
